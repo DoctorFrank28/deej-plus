@@ -1,24 +1,10 @@
 @ECHO OFF
 
-IF "%GOPATH%"=="" GOTO NOGO
-IF NOT EXIST %GOPATH%\bin\rsrc.exe GOTO INSTALL
-:POSTINSTALL
-ECHO Creating pkg/deej/cmd/rsrc.syso
-%GOPATH%\bin\rsrc -manifest pkg\deej\assets\deej.manifest  -ico pkg\deej\assets\logo.ico -o pkg\deej\cmd\rsrc_windows.syso
-GOTO DONE
+REM embeds the manifest and the app icon into the windows executable.
+REM the icon is drawn by tools/genicons (go run ./tools/genicons), which also updates assets\logo.ico
 
-:INSTALL
-ECHO Installing rsrc...
-go get  github.com/akavel/rsrc
-IF ERRORLEVEL 1 GOTO GETFAIL
-GOTO POSTINSTALL
+SET "DEEJ_ROOT=%~dp0..\..\..\.."
 
-:GETFAIL
-ECHO Failure running go get  github.com/akavel/rsrc.  Ensure that go and git are in PATH
-GOTO DONE
-
-:NOGO
-ECHO GOPATH environment variable not set
-GOTO DONE
-
-:DONE
+ECHO Creating pkg/deej/cmd/rsrc_windows.syso
+go run github.com/akavel/rsrc@v0.10.2 -arch amd64 -manifest "%DEEJ_ROOT%\pkg\deej\assets\deej.manifest" -ico "%DEEJ_ROOT%\pkg\deej\assets\logo.ico" -o "%DEEJ_ROOT%\pkg\deej\cmd\rsrc_windows.syso"
+IF ERRORLEVEL 1 ECHO Failed to create rsrc_windows.syso
