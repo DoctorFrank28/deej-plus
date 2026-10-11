@@ -1,14 +1,14 @@
 package deej
 
 import (
+	"bytes"
 	"os"
 	"path/filepath"
 
 	"github.com/gen2brain/beeep"
 	"go.uber.org/zap"
 
-	"github.com/omriharel/deej/pkg/deej/icon"
-	"github.com/omriharel/deej/pkg/deej/util"
+	"github.com/DoctorFrank28/deej-plus/pkg/deej/icon"
 )
 
 // Notifier provides generic notification sending
@@ -35,10 +35,11 @@ func NewToastNotifier(logger *zap.SugaredLogger) (*ToastNotifier, error) {
 func (tn *ToastNotifier) Notify(title string, message string) {
 
 	// we need to unpack deej.ico somewhere to remain portable. we already have it as bytes so it should be fine
-	appIconPath := filepath.Join(os.TempDir(), "deej.ico")
+	appIconPath := filepath.Join(os.TempDir(), "deej-plus.ico")
 
-	if !util.FileExists(appIconPath) {
-		tn.logger.Debugw("Deej icon file missing, creating", "path", appIconPath)
+	// rewrite it when missing or left over from another version (the icon changes between versions)
+	if existing, err := os.ReadFile(appIconPath); err != nil || !bytes.Equal(existing, icon.DeejLogo) {
+		tn.logger.Debugw("Deej icon file missing or outdated, creating", "path", appIconPath)
 
 		f, err := os.Create(appIconPath)
 		if err != nil {

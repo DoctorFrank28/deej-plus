@@ -9,7 +9,7 @@ import (
 	"runtime/debug"
 	"time"
 
-	"github.com/omriharel/deej/pkg/deej/util"
+	"github.com/DoctorFrank28/deej-plus/pkg/deej/util"
 )
 
 const (
@@ -17,11 +17,11 @@ const (
 	crashlogTimestampFormat = "2006.01.02-15.04.05"
 
 	crashMessage = `-----------------------------------------------------------------
-                        deej crashlog
+                      deej plus crashlog
 -----------------------------------------------------------------
-Unfortunately, deej has crashed. This really shouldn't happen!
-If you've just encountered this, please contact @omriharel and attach this error log.
-You can also join the deej Discord server at https://discord.gg/nf88NJu.
+Unfortunately, deej plus has crashed. This really shouldn't happen!
+If you've just encountered this, please open an issue and attach this error log:
+https://github.com/DoctorFrank28/deej-plus/issues
 -----------------------------------------------------------------
 Time: %s
 Panic occurred: %s

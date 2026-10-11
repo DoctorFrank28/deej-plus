@@ -3,16 +3,18 @@
 package deej
 
 import (
-	"errors"
 	"fmt"
 	"os"
 
 	"go.uber.org/zap"
 
-	"github.com/omriharel/deej/pkg/deej/util"
+	"github.com/DoctorFrank28/deej-plus/pkg/deej/util"
 )
 
 const (
+
+	// the name people see: tray, notifications, window title
+	appName = "deej plus"
 
 	// when this is set to anything, deej won't use a tray icon
 	envNoTray = "DEEJ_NO_TRAY_ICON"
@@ -25,10 +27,12 @@ type Deej struct {
 	config   *CanonicalConfig
 	serial   *SerialIO
 	sessions *sessionMap
+	ui       *uiServer
 
 	stopChannel chan bool
 	version     string
 	verbose     bool
+	openUI      bool
 }
 
 // NewDeej creates a Deej instance
@@ -76,6 +80,7 @@ func NewDeej(logger *zap.SugaredLogger, verbose bool) (*Deej, error) {
 	}
 
 	d.sessions = sessions
+	d.ui = newUIServer(d, logger)
 
 	logger.Debug("Created deej instance")
 
@@ -91,6 +96,22 @@ func (d *Deej) Initialize() error {
 		d.logger.Errorw("Failed to load config during initialization", "error", err)
 		return fmt.Errorf("load config during init: %w", err)
 	}
+
+	// a second deej would only find the port busy: show the running one instead
+	if first, err := acquireSingleInstance(); err != nil {
+		d.logger.Warnw("Failed to check for other deej instances", "error", err)
+	} else if !first {
+		d.logger.Info("deej is already running, opening its window and quitting")
+		d.ui.port = d.config.UIPort
+
+		if err := openAppWindow(d.ui.url()); err != nil {
+			d.logger.Warnw("Failed to open the running instance's window", "error", err)
+		}
+
+		return nil
+	}
+
+	d.ui.port = d.config.UIPort
 
 	// initialize the session map
 	if err := d.sessions.initialize(); err != nil {
@@ -113,6 +134,11 @@ func (d *Deej) Initialize() error {
 	}
 
 	return nil
+}
+
+// OpenUIOnStart makes deej open its window once it's running, whatever the config says
+func (d *Deej) OpenUIOnStart() {
+	d.openUI = true
 }
 
 // SetVersion causes deej to add a version string to its tray menu if called before Initialize
@@ -141,33 +167,15 @@ func (d *Deej) run() {
 	// watch the config file for changes
 	go d.config.WatchConfigFileChanges()
 
-	// connect to the arduino for the first time
-	go func() {
-		if err := d.serial.Start(); err != nil {
-			d.logger.Warnw("Failed to start first-time serial connection", "error", err)
+	// keep the arduino connected for as long as deej runs
+	d.serial.Start()
 
-			// If the port is busy, that's because something else is connected - notify and quit
-			if errors.Is(err, os.ErrPermission) {
-				d.logger.Warnw("Serial port seems busy, notifying user and closing",
-					"comPort", d.config.ConnectionInfo.COMPort)
+	// serve the control panel
+	d.ui.start()
 
-				d.notifier.Notify(fmt.Sprintf("Can't connect to %s!", d.config.ConnectionInfo.COMPort),
-					"This serial port is busy, make sure to close any serial monitor or other deej instance.")
-
-				d.signalStop()
-
-				// also notify if the COM port they gave isn't found, maybe their config is wrong
-			} else if errors.Is(err, os.ErrNotExist) {
-				d.logger.Warnw("Provided COM port seems wrong, notifying user and closing",
-					"comPort", d.config.ConnectionInfo.COMPort)
-
-				d.notifier.Notify(fmt.Sprintf("Can't connect to %s!", d.config.ConnectionInfo.COMPort),
-					"This serial port doesn't exist, check your configuration and make sure it's set correctly.")
-
-				d.signalStop()
-			}
-		}
-	}()
+	if d.config.OpenUIOnStart || d.openUI {
+		d.showUI()
+	}
 
 	// wait until stopped (gracefully)
 	<-d.stopChannel
@@ -179,6 +187,13 @@ func (d *Deej) run() {
 	} else {
 		// exit with 0
 		os.Exit(0)
+	}
+}
+
+// showUI shows the control panel window
+func (d *Deej) showUI() {
+	if err := openAppWindow(d.ui.url()); err != nil {
+		d.logger.Warnw("Failed to open the UI window", "error", err)
 	}
 }
 

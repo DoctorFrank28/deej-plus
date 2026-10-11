@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#fafafa" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#171717" media="(prefers-color-scheme: dark)">
+<title>deej plus</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="app.css">
+<script src="app.js" defer></script>
+</head>
+<body>
+<a class="skip-link" href="#contenuto" id="skip-link" data-i18n="skip"></a>
+<!--
+  Struttura statica della mini app. Nessun testo visibile qui: le stringhe stanno nel
+  dizionario I18N di app.js e arrivano tramite data-i18n (textContent) e
+  data-i18n-attr="attributo:chiave;attributo:chiave".
+-->
+<div class="app">
+
+<aside class="sidebar">
+  <div class="brand">
+    <svg class="brand-logo" aria-hidden="true" width="32" height="32" viewBox="0 0 24 24"><rect width="24" height="24" rx="5.5" fill="#171717"/><g fill="#fafafa"><rect x="5.75" y="5" width="1.5" height="14" rx=".75" opacity=".4"/><rect x="11.25" y="5" width="1.5" height="14" rx=".75" opacity=".4"/><rect x="16.75" y="5" width="1.5" height="14" rx=".75" opacity=".4"/><rect x="4.2" y="12.43" width="4.6" height="2.5" rx="1.2"/><rect x="9.7" y="6.83" width="4.6" height="2.5" rx="1.2"/><rect x="15.2" y="9.91" width="4.6" height="2.5" rx="1.2"/></g></svg>
+    <div class="brand-text">
+      <span class="brand-name">deej plus</span>
+      <span class="brand-sub" id="brand-version"></span>
+    </div>
+  </div>
+
+  <nav class="nav" data-i18n-attr="aria-label:nav.label">
+    <a href="#mixer" data-nav="mixer" aria-current="page">
+      <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/></svg>
+      <span data-i18n="nav.mixer"></span></a>
+    <a href="#assegnazioni" data-nav="assegnazioni">
+      <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      <span data-i18n="nav.assign"></span></a>
+    <a href="#impostazioni" data-nav="impostazioni">
+      <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.650 1.650 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      <span data-i18n="nav.settings"></span></a>
+  </nav>
+
+  <div class="device-card">
+    <span class="device-label" data-i18n="device.label"></span>
+    <span class="device-name" id="device-name"></span>
+    <span class="device-port mono" id="device-port"></span>
+  </div>
+</aside>
+
+<main class="main" id="contenuto" tabindex="-1">
+  <div class="link-banner" id="link-banner" role="status" hidden>
+    <svg class="icon spin" aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-6.22-8.56"/></svg>
+    <span data-i18n="link.down"></span>
+  </div>
+
+  <!-- ============ Mixer ============ -->
+  <section class="view" data-view="mixer" aria-labelledby="h-mixer">
+    <header class="page-header">
+      <div class="page-title">
+        <h1 id="h-mixer" tabindex="-1" data-i18n="nav.mixer"></h1>
+        <p class="muted" data-i18n="mixer.subtitle"></p>
+      </div>
+      <div class="header-actions">
+        <span class="badge" id="conn-badge" data-state="loading" role="status">
+          <span class="dot" aria-hidden="true"></span><span id="conn-badge-text"></span>
+        </span>
+        <button type="button" class="btn btn-outline" id="btn-reconnect">
+          <svg class="icon" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
+          <span data-i18n="mixer.reconnect"></span></button>
+      </div>
+    </header>
+
+    <div id="conn-banner"></div>
+
+    <div class="mixer-grid" id="mixer-grid" role="group" data-i18n-attr="aria-label:mixer.slidersLabel"></div>
+    <p class="empty-note" id="mixer-empty" hidden><span data-i18n="mixer.empty"></span> <a href="#assegnazioni" data-i18n="nav.assign"></a></p>
+
+    <footer class="page-footer">
+      <span id="last-event"></span>
+      <span class="legend"><span class="dot dot-live" aria-hidden="true"></span><span data-i18n="mixer.legend"></span></span>
+    </footer>
+  </section>
+
+  <!-- ============ Assegnazioni ============ -->
+  <section class="view" data-view="assegnazioni" aria-labelledby="h-assegnazioni" hidden>
+    <header class="page-header page-header-end">
+      <div class="page-title">
+        <h1 id="h-assegnazioni" tabindex="-1" data-i18n="nav.assign"></h1>
+        <p class="muted" data-i18n="assign.subtitle"></p>
+      </div>
+      <span class="save-status" id="save-assign" role="status"></span>
+    </header>
+
+    <div class="assign-layout">
+      <section class="assign-card" data-i18n-attr="aria-label:mixer.slidersLabel">
+        <ul class="assign-rows" id="assign-rows"></ul>
+        <div class="assign-foot">
+          <button type="button" class="btn btn-outline btn-sm" id="btn-add-slider">
+            <svg class="icon" aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+            <span data-i18n="assign.addSlider"></span></button>
+        </div>
+      </section>
+
+      <aside class="unassigned-card" aria-labelledby="h-unassigned">
+        <div class="card-head">
+          <h2 id="h-unassigned" tabindex="-1" data-i18n="assign.unassigned"></h2>
+          <p class="muted small" data-i18n="assign.unassignedHint"></p>
+        </div>
+        <div class="unassigned-list" id="unassigned-list"></div>
+        <p class="muted xsmall" data-i18n="assign.unassignedNote"></p>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ============ Impostazioni ============ -->
+  <section class="view" data-view="impostazioni" aria-labelledby="h-impostazioni" hidden>
+    <header class="page-header page-header-end">
+      <div class="page-title">
+        <h1 id="h-impostazioni" tabindex="-1" data-i18n="nav.settings"></h1>
+        <p class="muted" data-i18n="settings.subtitle"></p>
+      </div>
+      <span class="save-status" id="save-settings" role="status"></span>
+    </header>
+
+    <div class="settings-grid">
+      <div class="settings-col">
+        <section class="card" aria-labelledby="h-conn">
+          <div class="card-head">
+            <h2 id="h-conn" data-i18n="settings.conn"></h2>
+            <p class="muted small" data-i18n="settings.connHint"></p>
+          </div>
+          <div class="field-pair">
+            <div class="field">
+              <label for="set-port" data-i18n="settings.port"></label>
+              <select id="set-port" class="select" name="comPort"></select>
+            </div>
+            <div class="field">
+              <label for="set-baud" data-i18n="settings.baud"></label>
+              <select id="set-baud" class="select" name="baudRate"></select>
+            </div>
+          </div>
+          <p class="muted xsmall tight" data-i18n="settings.portHint"></p>
+          <div class="sep"></div>
+          <div class="toggle-row">
+            <div class="toggle-text">
+              <span id="lbl-autoReconnect" class="toggle-label" data-i18n="settings.autoReconnect"></span>
+              <span id="hint-autoReconnect" class="muted small" data-i18n="settings.autoReconnectHint"></span>
+            </div>
+            <button type="button" class="switch" role="switch" aria-checked="false" data-setting="autoReconnect" aria-labelledby="lbl-autoReconnect" aria-describedby="hint-autoReconnect"><span class="switch-thumb"></span></button>
+          </div>
+          <div class="toggle-row">
+            <div class="toggle-text">
+              <span id="lbl-notify" class="toggle-label" data-i18n="settings.notify"></span>
+              <span id="hint-notify" class="muted small" data-i18n="settings.notifyHint"></span>
+            </div>
+            <button type="button" class="switch" role="switch" aria-checked="false" data-setting="notifyOnDisconnect" aria-labelledby="lbl-notify" aria-describedby="hint-notify"><span class="switch-thumb"></span></button>
+          </div>
+          <div class="toggle-row">
+            <label for="set-interval" class="toggle-label" data-i18n="settings.retryEvery"></label>
+            <div class="inline-field">
+              <input id="set-interval" class="input input-num mono" type="number" inputmode="numeric" min="1" max="30" step="1" name="reconnectInterval" autocomplete="off" aria-describedby="unit-interval">
+              <span id="unit-interval" class="muted small" data-i18n="settings.seconds"></span>
+            </div>
+          </div>
+        </section>
+
+        <section class="card" aria-labelledby="h-sys">
+          <h2 id="h-sys" data-i18n="settings.system"></h2>
+          <div class="toggle-row">
+            <div class="toggle-text">
+              <span id="lbl-start" class="toggle-label" data-i18n="settings.startup"></span>
+              <span id="hint-start" class="muted small" data-i18n="settings.startupHint"></span>
+            </div>
+            <button type="button" class="switch" role="switch" aria-checked="false" data-setting="startWithWindows" aria-labelledby="lbl-start" aria-describedby="hint-start"><span class="switch-thumb"></span></button>
+          </div>
+          <div class="toggle-row">
+            <div class="toggle-text">
+              <span id="lbl-openui" class="toggle-label" data-i18n="settings.openUi"></span>
+              <span id="hint-openui" class="muted small" data-i18n="settings.openUiHint"></span>
+            </div>
+            <button type="button" class="switch" role="switch" aria-checked="false" data-setting="openUiOnStart" aria-labelledby="lbl-openui" aria-describedby="hint-openui"><span class="switch-thumb"></span></button>
+          </div>
+          <div class="toggle-row">
+            <label for="set-language" class="toggle-label" data-i18n="settings.language"></label>
+            <select id="set-language" class="select select-auto" name="language"></select>
+          </div>
+          <div class="sep"></div>
+          <div class="file-row">
+            <div class="toggle-text">
+              <span class="toggle-label" data-i18n="settings.configFile"></span>
+              <span class="mono xsmall muted path" id="config-path"></span>
+            </div>
+            <div class="btn-group">
+              <button type="button" class="btn btn-outline btn-sm" data-open="configFolder" data-i18n="settings.openFolder"></button>
+              <button type="button" class="btn btn-outline btn-sm" data-open="log" data-i18n="settings.openLog"></button>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <section class="card" aria-labelledby="h-slider">
+        <div class="card-head">
+          <h2 id="h-slider" data-i18n="settings.sliders"></h2>
+          <p class="muted small" data-i18n="settings.slidersHint"></p>
+        </div>
+        <div class="toggle-row">
+          <div class="toggle-text">
+            <span id="lbl-invert" class="toggle-label" data-i18n="settings.invert"></span>
+            <span id="hint-invert" class="muted small" data-i18n="settings.invertHint"></span>
+          </div>
+          <button type="button" class="switch" role="switch" aria-checked="false" data-setting="invertSliders" aria-labelledby="lbl-invert" aria-describedby="hint-invert"><span class="switch-thumb"></span></button>
+        </div>
+
+        <div class="field">
+          <span id="lbl-preset" class="field-label" data-i18n="settings.filter"></span>
+          <div class="segmented" role="radiogroup" aria-labelledby="lbl-preset" id="preset-group">
+            <button type="button" role="radio" aria-checked="false" data-preset="low" data-i18n="preset.low"></button>
+            <button type="button" role="radio" aria-checked="false" data-preset="default" data-i18n="preset.default"></button>
+            <button type="button" role="radio" aria-checked="false" data-preset="high" data-i18n="preset.high"></button>
+            <button type="button" role="radio" aria-checked="false" data-preset="custom" data-i18n="preset.custom"></button>
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="range-head">
+            <label for="r-deadband" data-i18n="filter.deadband"></label>
+            <output for="r-deadband" class="mono range-val" id="v-deadband"></output>
+          </div>
+          <input id="r-deadband" class="range" type="range" min="0.1" max="2" step="0.1" data-filter="deadband" aria-describedby="hint-deadband">
+          <span id="hint-deadband" class="muted xsmall" data-i18n="filter.deadbandHint"></span>
+        </div>
+        <div class="field">
+          <div class="range-head">
+            <label for="r-smoothing" data-i18n="filter.smoothing"></label>
+            <output for="r-smoothing" class="mono range-val" id="v-smoothing"></output>
+          </div>
+          <input id="r-smoothing" class="range" type="range" min="0" max="0.9" step="0.1" data-filter="smoothing" aria-describedby="hint-smoothing">
+          <span id="hint-smoothing" class="muted xsmall" data-i18n="filter.smoothingHint"></span>
+        </div>
+        <div class="field">
+          <div class="range-head">
+            <label for="r-edgeSnap" data-i18n="filter.edgeSnap"></label>
+            <output for="r-edgeSnap" class="mono range-val" id="v-edgeSnap"></output>
+          </div>
+          <input id="r-edgeSnap" class="range" type="range" min="0" max="5" step="0.5" data-filter="edgeSnap" aria-describedby="hint-edgeSnap">
+          <span id="hint-edgeSnap" class="muted xsmall" data-i18n="filter.edgeSnapHint"></span>
+        </div>
+
+        <figure class="chart-figure">
+          <figcaption class="chart-head">
+            <span class="chart-title">
+              <label for="chart-slider" data-i18n="chart.title"></label>
+              <select id="chart-slider" class="select select-sm"></select>
+            </span>
+            <span class="chart-legend">
+              <span class="legend-item"><span class="swatch swatch-raw" aria-hidden="true"></span><span data-i18n="chart.raw"></span></span>
+              <span class="legend-item"><span class="swatch swatch-value" aria-hidden="true"></span><span data-i18n="chart.value"></span></span>
+            </span>
+          </figcaption>
+          <canvas id="chart" class="chart-canvas" role="img"></canvas>
+          <span class="muted xsmall" data-i18n="chart.caption"></span>
+        </figure>
+      </section>
+    </div>
+  </section>
+</main>
+</div>
+
+<div class="toast" id="toast" role="status"></div>
+</body>
+</html>

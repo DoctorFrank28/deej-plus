@@ -143,6 +143,16 @@ func (s *wcaSession) SetVolume(v float32) error {
 	return nil
 }
 
+func (s *wcaSession) isActive() bool {
+	var state uint32
+
+	if err := s.control.GetState(&state); err != nil {
+		return false
+	}
+
+	return state == wca.AudioSessionStateActive
+}
+
 func (s *wcaSession) Release() {
 	s.logger.Debug("Releasing audio session")
 

@@ -3,8 +3,10 @@ package main
 import (
 	"flag"
 	"fmt"
+	"os"
+	"path/filepath"
 
-	"github.com/omriharel/deej/pkg/deej"
+	"github.com/DoctorFrank28/deej-plus/pkg/deej"
 )
 
 var (
@@ -13,15 +15,25 @@ var (
 	buildType  string
 
 	verbose bool
+	openUI  bool
 )
 
 func init() {
 	flag.BoolVar(&verbose, "verbose", false, "show verbose logs (useful for debugging serial)")
 	flag.BoolVar(&verbose, "v", false, "shorthand for --verbose")
+	flag.BoolVar(&openUI, "open", false, "open the deej window once started (or show the running instance's)")
 	flag.Parse()
 }
 
 func main() {
+
+	// started from a shortcut, the startup folder or the registry, the working directory can be
+	// anywhere: config.yaml and the logs live next to the executable
+	if _, err := os.Stat("config.yaml"); err != nil {
+		if exe, err := os.Executable(); err == nil {
+			os.Chdir(filepath.Dir(exe))
+		}
+	}
 
 	// first we need a logger
 	logger, err := deej.NewLogger(buildType)
@@ -55,8 +67,16 @@ func main() {
 			identifier = versionTag
 		}
 
-		versionString := fmt.Sprintf("Version %s-%s", buildType, identifier)
+		versionString := identifier
+		if buildType != "release" {
+			versionString = fmt.Sprintf("%s (%s)", identifier, buildType)
+		}
+
 		d.SetVersion(versionString)
+	}
+
+	if openUI {
+		d.OpenUIOnStart()
 	}
 
 	// onwards, to glory

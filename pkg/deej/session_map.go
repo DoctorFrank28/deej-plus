@@ -3,11 +3,12 @@ package deej
 import (
 	"fmt"
 	"regexp"
+	"sort"
 	"strings"
 	"sync"
 	"time"
 
-	"github.com/omriharel/deej/pkg/deej/util"
+	"github.com/DoctorFrank28/deej-plus/pkg/deej/util"
 	"github.com/thoas/go-funk"
 	"go.uber.org/zap"
 )
@@ -23,6 +24,21 @@ type sessionMap struct {
 
 	lastSessionRefresh time.Time
 	unmappedSessions   []Session
+
+	// refreshes come from slider moves, config reloads, the tray and the UI
+	refreshLock sync.Mutex
+}
+
+// SessionInfo describes an open audio session for the UI
+type SessionInfo struct {
+	Key    string `json:"key"`
+	Active bool   `json:"active"`
+	Mapped bool   `json:"mapped"`
+}
+
+// sessions that can tell whether they're playing audio right now
+type activityReporter interface {
+	isActive() bool
 }
 
 const (
@@ -151,6 +167,8 @@ func (m *sessionMap) setupOnSliderMove() {
 
 // performance: explain why force == true at every such use to avoid unintended forced refresh spams
 func (m *sessionMap) refreshSessions(force bool) {
+	m.refreshLock.Lock()
+	defer m.refreshLock.Unlock()
 
 	// make sure enough time passed since the last refresh, unless force is true in which case always clear
 	if !force && m.lastSessionRefresh.Add(minTimeBetweenSessionRefreshes).After(time.Now()) {
@@ -321,6 +339,36 @@ func (m *sessionMap) applyTargetTransform(specialTargetName string) []string {
 	}
 
 	return nil
+}
+
+// snapshot lists the open audio sessions, one entry per key
+func (m *sessionMap) snapshot() []SessionInfo {
+	m.lock.Lock()
+	keys := make([]string, 0, len(m.m))
+	byKey := make(map[string][]Session, len(m.m))
+	for key, sessions := range m.m {
+		keys = append(keys, key)
+		byKey[key] = append([]Session(nil), sessions...)
+	}
+	m.lock.Unlock()
+
+	sort.Strings(keys)
+
+	result := make([]SessionInfo, 0, len(keys))
+	for _, key := range keys {
+		info := SessionInfo{Key: key, Mapped: m.sessionMapped(byKey[key][0])}
+
+		for _, session := range byKey[key] {
+			if reporter, ok := session.(activityReporter); ok && reporter.isActive() {
+				info.Active = true
+				break
+			}
+		}
+
+		result = append(result, info)
+	}
+
+	return result
 }
 
 func (m *sessionMap) add(value Session) {

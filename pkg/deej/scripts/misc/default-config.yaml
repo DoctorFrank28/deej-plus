@@ -6,6 +6,7 @@
 # windows only - you can use a device's full name, i.e. "Speakers (Realtek High Definition Audio)", to bind it. this works for both output and input devices
 # windows only - you can use 'system' to control the "system sounds" volume
 # important: slider indexes start at 0, regardless of which analog pins you're using!
+# tip: the deej plus window (tray icon -> Open deej plus) edits all of this for you
 slider_mapping:
   0: master
   1: chrome.exe
@@ -15,13 +16,48 @@ slider_mapping:
     - rocketleague.exe
   4: discord.exe
 
+# optional names shown in the deej plus window
+slider_names:
+  0: Master
+  1: Browser
+  2: Music
+
 # set this to true if you want the controls inverted (i.e. top is 0%, bottom is 100%)
 invert_sliders: false
 
 # settings for connecting to the arduino board
-com_port: COM4
+# "auto" finds the board by its usb id, even if windows moves it to another port. or set one, e.g. COM4
+com_port: auto
 baud_rate: 9600
 
+# keep trying to reach the board when it's unplugged, asleep or busy (seconds between attempts)
+auto_reconnect: true
+reconnect_interval: 2
+
+# treat the board as lost after this many seconds without data (0 = never). only set this if your
+# sketch keeps sending values even when nothing moves, like the filtered sketch that ships with deej
+serial_timeout: 0
+
+# show a notification when the board disconnects and when it comes back
+notify_on_disconnect: true
+
+# the value your board sends for a slider at its top. 1023 for most sketches
+slider_max_value: 1023
+
 # adjust the amount of signal noise reduction depending on your hardware quality
-# supported values are "low" (excellent hardware), "default" (regular hardware) or "high" (bad, noisy hardware)
+# supported values are "low" (excellent hardware), "default" (regular hardware), "high" (bad, noisy hardware)
+# or "custom", which uses the values under noise_filter
 noise_reduction: default
+
+# only used with noise_reduction: custom. deadband and edge_snap are percentages
+noise_filter:
+  deadband: 0.4
+  smoothing: 0
+  edge_snap: 1
+
+# language of the tray menu, notifications and window: auto (follows windows), en or it
+language: auto
+
+# the deej plus window is served locally on this port
+ui_port: 47823
+open_ui_on_start: false
