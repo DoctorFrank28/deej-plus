@@ -1,0 +1,77 @@
+name: Bug report
+description: Something in deej plus doesn't work as it should
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time! English or Italian are both fine.
+        Please search the [existing issues](https://github.com/DoctorFrank28/deej-plus/issues) first, and report problems with the *original* deej to its own project, not here.
+
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What did you do, what did you expect, and what happened instead?
+      placeholder: "I unplugged the board and plugged it back in, but the sliders stopped working until I restarted deej plus."
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. ...
+        2. ...
+        3. ...
+
+  - type: input
+    id: version
+    attributes:
+      label: deej plus version
+      description: Shown in the tray menu and at the top left of the window.
+      placeholder: v1.0.0
+    validations:
+      required: true
+
+  - type: input
+    id: windows
+    attributes:
+      label: Windows version
+      placeholder: Windows 11 24H2
+
+  - type: input
+    id: board
+    attributes:
+      label: Board and sketch
+      description: Which board, how many sliders, and which sketch is on it.
+      placeholder: Arduino Uno, 6 sliders, deej-6-sliders-filtered
+
+  - type: dropdown
+    id: connection
+    attributes:
+      label: Connection state shown in the window
+      options:
+        - Connected
+        - Reconnecting
+        - Disconnected
+        - Port busy
+        - The window doesn't open
+        - Not sure
+
+  - type: textarea
+    id: log
+    attributes:
+      label: Log
+      description: |
+        Attach or paste `logs\deej-latest-run.log` from the install folder (Settings → Log in the window opens it).
+        If deej plus crashed, also attach the `deej-crash-*.log` file from the same folder.
+      render: text
+
+  - type: textarea
+    id: config
+    attributes:
+      label: config.yaml (optional)
+      description: Remove anything you'd rather not share.
+      render: yaml
