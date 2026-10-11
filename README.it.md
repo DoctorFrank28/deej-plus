@@ -28,6 +28,8 @@ Mantiene l'hardware, il protocollo seriale e il `config.yaml` di deej, e aggiung
 1. **Costruisci l'hardware** come nella [guida di deej](https://github.com/omriharel/deej#build-your-own) (slider, Arduino, qualche filo).
 2. **Carica uno sketch** sulla scheda: consigliato [`deej-6-sliders-filtered`](arduino/deej-6-sliders-filtered/deej-6-sliders-filtered.ino). Imposta `NUM_SLIDERS` e l'elenco dei pin secondo il tuo cablaggio: il primo pin dell'elenco è lo slider 0 del config. [Come funzionano gli sketch e come caricarli](arduino/README.it.md).
 3. **Avvia l'installer** `deej-plus-setup-<versione>.exe` dalle [release](https://github.com/DoctorFrank28/deej-plus/releases/latest). Arrivi da deej? Chiudilo prima: l'installer copia il suo `config.yaml`.
+
+   > **Windows SmartScreen** può mostrare *"PC protetto da Windows"*: deej plus non ha la firma digitale del codice (il certificato si paga ogni anno), quindi Windows non conosce ancora l'autore. Clicca **Ulteriori informazioni → Esegui comunque**. L'installer viene compilato dal codice di questo repository con [GitHub Actions](https://github.com/DoctorFrank28/deej-plus/actions), quindi puoi verificare da dove arriva ogni release.
 4. deej plus apre la sua finestra: assegna le app agli slider e hai finito.
 
 Requisiti: Windows 10 o 11 (x64). Su Linux si compila, ma non è provato.
