@@ -104,6 +104,11 @@ jobs:
         run: |
           version="${GITHUB_REF_NAME#v}"
           notes=$(awk -v v="## $GITHUB_REF_NAME" '$0 ~ "^## " { if (found) exit; found = index($0, v) == 1; next } found' CHANGELOG.md)
+          notes="$notes
+
+          ---
+
+          **Installing:** download \`deej-plus-setup-${version}.exe\` below and run it. Windows SmartScreen may say *\"Windows protected your PC\"* because deej plus is not code-signed: click **More info → Run anyway**. The installer is built from this repository by GitHub Actions."
           gh release create "$GITHUB_REF_NAME" --draft --title "deej plus $GITHUB_REF_NAME" --notes "$notes" \
             "artifacts/deej-plus-setup-${version}.exe" \
             "artifacts/v${version}/deej-plus.exe"
