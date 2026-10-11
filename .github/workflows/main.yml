@@ -3,37 +3,106 @@ name: Build
 on:
   push:
     branches: [master]
+    tags: ["v*"]
   pull_request:
     branches: [master]
 
+permissions:
+  contents: read
+
 jobs:
-  build:
-    name: Build
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [windows-latest, ubuntu-latest]
-        mode: [release, dev]
-        go: ["1.14"]
+  windows:
+    name: Windows (test, build, installer)
+    runs-on: windows-latest
 
     steps:
-      - name: Setup Go
-        uses: actions/setup-go@v2
-        with:
-          go-version: ${{ matrix.go }}
-
-      - name: Install prerequisites (Linux)
-        if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y libgtk-3-dev libappindicator3-dev libwebkit2gtk-4.0-dev
-
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Build deej (Windows)
-        if: runner.os == 'Windows'
-        run: pkg/deej/scripts/windows/build-${{ matrix.mode }}.bat
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Vet
+        run: go vet ./pkg/deej/... ./tools/...
+
+      - name: Test
+        run: go test ./pkg/deej/...
+
+      - name: Version
+        id: version
+        shell: bash
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            echo "version=${GITHUB_REF#refs/tags/v}" >> "$GITHUB_OUTPUT"
+          else
+            echo "version=0.0.0-ci.${GITHUB_RUN_NUMBER}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install Inno Setup
+        shell: pwsh
+        run: |
+          if (-not (Test-Path "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe")) { choco install innosetup -y --no-progress }
+
+      - name: Build installer
         shell: cmd
+        run: pkg\deej\scripts\windows\build-installer.bat ${{ steps.version.outputs.version }}
 
-      - name: Build deej (Linux)
-        if: runner.os == 'Linux'
-        run: pkg/deej/scripts/linux/build-${{ matrix.mode }}.sh
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: deej-plus-${{ steps.version.outputs.version }}
+          path: |
+            releases/deej-plus-setup-${{ steps.version.outputs.version }}.exe
+            releases/v${{ steps.version.outputs.version }}/deej-plus.exe
+
+  linux:
+    name: Linux (build only, untested at runtime)
+    runs-on: ubuntu-22.04
+    continue-on-error: true
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Install prerequisites
+        run: sudo apt-get update && sudo apt-get install -y libgtk-3-dev libappindicator3-dev
+
+      - name: Build
+        run: go build -o deej-plus ./pkg/deej/cmd
+
+  release:
+    name: Draft GitHub release
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: windows
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: Create draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          notes=$(awk -v v="## $GITHUB_REF_NAME" '$0 ~ "^## " { if (found) exit; found = index($0, v) == 1; next } found' CHANGELOG.md)
+          gh release create "$GITHUB_REF_NAME" --draft --title "deej plus $GITHUB_REF_NAME" --notes "$notes" \
+            "artifacts/deej-plus-setup-${version}.exe" \
+            "artifacts/v${version}/deej-plus.exe"
