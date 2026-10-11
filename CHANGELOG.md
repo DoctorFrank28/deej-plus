@@ -14,6 +14,7 @@ First release of deej plus, forked from deej v0.9.10.
 **Window**
 - New local window (tray → Open deej plus) with Mixer, Assignments and Settings, saving straight into `config.yaml` with its comments.
 - Slider names (`slider_names`), start with Windows, open on start, language.
+- Assigned app and device names can be edited in place (click the name). Sliders appear by themselves as the board reports them.
 
 **Sliders**
 - New noise filter with hysteresis: no flicker at rest, 1% steps when moving, exact 0% and 100%. Presets `low`, `default`, `high` and `custom` (`noise_filter`).

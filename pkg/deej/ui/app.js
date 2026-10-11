@@ -78,7 +78,6 @@
       'error.interval': 'Scegli un valore da 1 a 30 secondi.',
 
       'assign.subtitle': 'Quali app comanda ogni slider. Le modifiche si salvano da sole.',
-      'assign.addSlider': 'Aggiungi slider',
       'assign.unassigned': 'Non assegnate',
       'assign.unassignedHint': 'App che fanno audio ma non sono su nessuno slider.',
       'assign.unassignedNote': "Le app non assegnate seguono lo slider con «Tutte le non assegnate», se c'è.",
@@ -86,6 +85,9 @@
       'assign.add': 'Aggiungi',
       'assign.addTo': 'Aggiungi app allo slider {name}',
       'assign.remove': 'Togli {target} da {name}',
+      'assign.edit': 'Modifica {target}',
+      'assign.editHint': 'Clic per modificare il nome',
+      'assign.editLabel': 'Nuovo nome per {target} (Invio salva, Esc annulla)',
       'assign.assignTo': 'Assegna a…',
       'assign.assignLabel': 'Assegna {app} a',
       'assign.noneUnassigned': 'Tutte le app aperte sono già su uno slider.',
@@ -229,7 +231,6 @@
       'error.interval': 'Pick a value from 1 to 30 seconds.',
 
       'assign.subtitle': 'Which apps each slider controls. Changes save automatically.',
-      'assign.addSlider': 'Add Slider',
       'assign.unassigned': 'Unassigned',
       'assign.unassignedHint': 'Apps making sound that aren’t on any slider.',
       'assign.unassignedNote': 'Unassigned apps follow the slider with “All unassigned”, if there is one.',
@@ -237,6 +238,9 @@
       'assign.add': 'Add',
       'assign.addTo': 'Add app to slider {name}',
       'assign.remove': 'Remove {target} from {name}',
+      'assign.edit': 'Edit {target}',
+      'assign.editHint': 'Click to edit the name',
+      'assign.editLabel': 'New name for {target} (Enter saves, Esc cancels)',
       'assign.assignTo': 'Assign to…',
       'assign.assignLabel': 'Assign {app} to',
       'assign.noneUnassigned': 'Every open app is already on a slider.',
@@ -763,6 +767,8 @@
     r.addBtn.setAttribute('aria-label', t('assign.addTo', { name }));
     const key = JSON.stringify([LANG, name, s.targets, s.targets.map((x) => isLive(x, act))]);
     if (key === r.chipsKey) return;
+    // a chip being renamed would lose what's typed: rebuild once editing ends
+    if (r.targets.querySelector('.tchip-input')) return;
     r.chipsKey = key;
     withFocus(r.targets, () => {
       while (r.targets.firstChild !== r.addBtn) r.targets.firstChild.remove();
@@ -773,9 +779,21 @@
   function buildTargetChip(s, tg, act) {
     const info = targetInfo(tg);
     const live = isLive(tg, act);
+    // special targets are keywords (master, mic, deej.current…): only app and device names can be edited
+    let text;
+    if (info.kind === 'special') {
+      text = h('span', { class: 'tchip-text', title: info.label }, info.label);
+    } else {
+      text = h('button', {
+        type: 'button', class: 'tchip-text tchip-edit', title: t('assign.editHint'),
+        'aria-label': t('assign.edit', { target: info.label }),
+        'data-focus-key': `e:${s.index}:${lc(tg)}`
+      }, info.label);
+      text.addEventListener('click', () => startEditTarget(text, s, tg));
+    }
     return h('span', { class: `tchip tchip-${info.kind}` },
       live ? h('span', { class: 'dot dot-live', 'aria-hidden': 'true' }) : null,
-      h('span', { class: 'tchip-text', title: info.label }, info.label),
+      text,
       live ? h('span', { class: 'sr-only' }, ' ' + t('mixer.live')) : null,
       h('button', {
         type: 'button', class: 'tchip-x',
@@ -811,14 +829,55 @@
       (el || r.addBtn).focus();
     });
   }
-  function addSlider() {
-    const sliders = S.state.sliders;
-    const index = sliders.length ? Math.max(...sliders.map((s) => s.index)) + 1 : 0;
-    saveMapping(() => {
-      const s = { index, name: '', targets: [], raw: 0, value: 0 };
-      sliders.push(s);
-      S.byIndex.set(index, s);
-    }, () => { const r = rowRefs.get(index); if (r) r.input.focus(); });
+  function startEditTarget(btn, s, tg) {
+    const fit = (v) => `${Math.max(v.length, 6) + 2}ch`;
+    const input = h('input', {
+      type: 'text', class: 'tchip-input', value: tg, spellcheck: 'false', autocomplete: 'off',
+      'aria-label': t('assign.editLabel', { target: tg })
+    });
+    input.style.width = fit(tg);
+    input.addEventListener('input', () => { input.style.width = fit(input.value); });
+
+    let done = false;
+    const finish = (save) => {
+      if (done) return;
+      done = true;
+      const next = input.value.trim();
+      const taken = s.targets.some((x) => lc(x) === lc(next) && lc(x) !== lc(tg));
+
+      // put the chip back first: while the input is in the row, the row isn't redrawn
+      input.replaceWith(btn);
+
+      if (save && next && next !== tg && !taken) {
+        editTarget(s.index, tg, next);
+        return;
+      }
+      btn.focus();
+      renderAssign();
+    };
+
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); finish(true); }
+      else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); finish(false); }
+    });
+    input.addEventListener('blur', () => finish(true));
+
+    btn.replaceWith(input);
+    input.focus();
+    input.select();
+  }
+  function editTarget(index, old, next) {
+    const s = S.byIndex.get(index);
+    if (!s) return;
+    const i = s.targets.findIndex((x) => lc(x) === lc(old));
+    if (i < 0) return;
+    const r = rowRefs.get(index);
+    if (r) r.chipsKey = '';
+    saveMapping(() => { s.targets[i] = next; }, () => {
+      const row = rowRefs.get(index);
+      const el = row && row.targets.querySelector(`[data-focus-key="${CSS.escape(`e:${index}:${lc(next)}`)}"]`);
+      if (el) el.focus();
+    });
   }
 
   async function saveMapping(mutate, focusFn) {
@@ -1523,7 +1582,6 @@
   async function init() {
     setLanguage(resolveLang(MOCK && qs.get('lang') ? qs.get('lang') : 'auto'));
     bindSettings();
-    $('#btn-add-slider').addEventListener('click', () => { if (S.state) addSlider(); });
     const rb = $('#btn-reconnect');
     rb.addEventListener('click', async () => {
       if (rb.getAttribute('aria-disabled') === 'true') return;
